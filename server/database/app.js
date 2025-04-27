@@ -69,12 +69,18 @@ app.get('/fetchDealers', async (req, res) => {
 // Express route to fetch Dealers by a particular state
 app.get('/fetchDealers/:state', async (req, res) => {
   try {
-    const dealers = await Dealerships.find({ state: req.params.state.toUpperCase() });
+    const stateParam = req.params.state;
+
+    const dealers = await Dealerships.find({ 
+      state: { $regex: new RegExp(`^${stateParam}$`, 'i') }  // cari exact match tapi case-insensitive
+    });
+
     res.json(dealers);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching dealerships by state' });
   }
 });
+
 
 // Express route to fetch dealer by a particular id
 app.get('/fetchDealer/:id', async (req, res) => {
