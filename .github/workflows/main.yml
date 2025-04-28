@@ -22,19 +22,23 @@ jobs:
       with:
         node-version: 20
 
-    - name: Install Python and JavaScript dependencies
+    - name: Install Node.js Dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install black
-        npm install eslint --global
-        npm install @eslint/js --global
+        if [ ! -f package.json ]; then
+          npm init -y
+        fi
+        npm install eslint @eslint/js --save-dev
 
     - name: Create ESLint Config (if not exists)
       run: |
         if [ ! -f eslint.config.js ]; then
-          echo "Creating eslint.config.js"
           echo "import js from '@eslint/js'; export default [js.configs.recommended];" > eslint.config.js
         fi
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install black
 
     - name: Auto-fix Python code
       run: |
@@ -43,7 +47,7 @@ jobs:
 
     - name: Auto-fix JavaScript code
       run: |
-        find ./server/database -name "*.js" -exec eslint --fix {} +
+        npx eslint "**/*.js" --fix
         echo "Auto-fixed all JavaScript files successfully."
 
     - name: Commit and Push Changes
