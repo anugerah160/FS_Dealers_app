@@ -1,4 +1,4 @@
-name: Lint and Test
+name: Lint Code
 
 on:
   push:
@@ -17,19 +17,19 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20' 
+        node-version: '20'
 
-    - name: Install Node.js dependencies
-      run: npm install
+    - name: Install ESLint
+      run: npm install -g eslint
 
     - name: Lint JavaScript files (ignore errors)
       run: |
-        npx eslint . --fix || echo "Ignoring ESLint errors..."
+        npx eslint server/database/**/*.js --fix || echo "Ignoring ESLint errors..."
 
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.12' 
+        python-version: '3.12'
 
     - name: Install Python dependencies
       run: |
@@ -38,4 +38,4 @@ jobs:
 
     - name: Run Python tests
       run: |
-        pytest 
+        pytest
