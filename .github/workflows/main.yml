@@ -1,4 +1,4 @@
-name: 'Lint Code'
+name: 'Lint and Auto-Fix Code'
 on:
   push:
     branches: [master, main]
@@ -6,46 +6,49 @@ on:
     branches: [master, main]
 
 jobs:
-  lint_and_fix_python:
-    name: Lint and Fix Python Files
+  lint_and_fix:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: 3.12
 
-    - name: Install Python dependencies
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+
+    - name: Install Python and JavaScript dependencies
       run: |
         python -m pip install --upgrade pip
         pip install black
-
-    - name: Auto-fix Python Code with Black
-      run: |
-        black .  # format all Python files recursively
-        echo "Auto-formatted all Python files successfully"
-
-  lint_and_fix_js:
-    name: Lint and Fix JavaScript Files
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
-
-    - name: Install Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
-
-    - name: Install JavaScript dependencies
-      run: |
         npm install eslint --global
+        npm install @eslint/js --global
 
-    - name: Auto-fix JavaScript Code with ESLint
+    - name: Create ESLint Config (if not exists)
       run: |
-        # Make sure you have a .eslintrc.json config file
+        if [ ! -f eslint.config.js ]; then
+          echo "Creating eslint.config.js"
+          echo "import js from '@eslint/js'; export default [js.configs.recommended];" > eslint.config.js
+        fi
+
+    - name: Auto-fix Python code
+      run: |
+        black .
+        echo "Formatted all Python files successfully."
+
+    - name: Auto-fix JavaScript code
+      run: |
         find ./server/database -name "*.js" -exec eslint --fix {} +
-        echo "Auto-fixed all JavaScript files successfully"
+        echo "Auto-fixed all JavaScript files successfully."
+
+    - name: Commit and Push Changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add .
+        git diff --cached --exit-code || (git commit -m "chore: auto-fix lint issues" && git push)
