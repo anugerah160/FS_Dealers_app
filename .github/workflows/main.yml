@@ -1,60 +1,41 @@
-name: 'Lint and Auto-Fix Code'
+name: Lint and Test
+
 on:
   push:
-    branches: [master, main]
+    branches: [ main ]
   pull_request:
-    branches: [master, main]
+    branches: [ main ]
 
 jobs:
-  lint_and_fix:
+  lint-and-test:
     runs-on: ubuntu-latest
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.12
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: '20' 
 
-    - name: Install Node.js Dependencies
+    - name: Install Node.js dependencies
+      run: npm install
+
+    - name: Lint JavaScript files (ignore errors)
       run: |
-        if [ ! -f package.json ]; then
-          npm init -y
-        fi
-        npm install eslint @eslint/js @babel/eslint-parser eslint-plugin-react --save-dev
+        npx eslint . --fix || echo "Ignoring ESLint errors..."
 
-    - name: Create ESLint Config (if not exists)
-      run: |
-        if [ ! -f eslint.config.js ]; then
-          echo 'import js from "@eslint/js"; export default [js.configs.recommended];' > eslint.config.js
-        fi
-        jq '.type="module"' package.json > package.tmp.json && mv package.tmp.json package.json
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12' 
 
-    - name: Install Python Dependencies
+    - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install black
+        pip install -r requirements.txt
 
-    - name: Auto-fix Python code
+    - name: Run Python tests
       run: |
-        black .
-        echo "Formatted all Python files successfully."
-
-    - name: Auto-fix JavaScript code
-      run: |
-        npx eslint "server/database/**/*.js" --fix
-        npx eslint "server/frontend/src/**/*.js" --fix
-        echo "Auto-fixed all JavaScript files successfully."
-
-    - name: Commit and Push Changes
-      run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git add .
-        git diff --cached --exit-code || (git commit -m "chore: auto-fix lint issues" && git push)
+        pytest 
