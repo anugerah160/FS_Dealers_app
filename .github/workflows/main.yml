@@ -1,4 +1,4 @@
-name: 'Lint and Auto-Fix Code'
+name: 'Lint Code'
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint_python:
-    name: Lint and Auto-Fix Python Files
+    name: Lint Python Files
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
@@ -36,7 +36,7 @@ jobs:
         git diff --cached --quiet || (git commit -m "Auto-format Python code with Black" && git push)
 
   lint_js:
-    name: Lint and Auto-Fix JavaScript Files
+    name: Lint JavaScript Files
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
